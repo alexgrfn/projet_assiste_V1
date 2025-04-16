@@ -1,11 +1,13 @@
 package com.projet_assiste_test;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+// ALEXANDRE GARAFFINI G5
+
 // NOTES IMPORTANTES
 
-// Lien vers le répositoire github : // https://github.com/alexgrfn/projet_assiste_V1
+// Lien vers le répositoire github : https://github.com/alexgrfn/projet_assiste_V1
 // Comme vous pouvez le constater, mon fichier a une structure Maven.
 
 // Projet : Système de Réservation de Vols
@@ -270,6 +272,8 @@ public class Main {
         p1.obtenirReservations().forEach(r -> System.out.println(r.getNumeroReservation()));
     }
 }
+
+// BONUS : CLASS STATISTIQUES
 
 class Statistiques {
 
