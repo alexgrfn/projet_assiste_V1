@@ -1,14 +1,17 @@
 package com.projet_assiste_test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-// Lien vers le répositoire github.
+// NOTES IMPORTANTES
+
+// Lien vers le répositoire github : // https://github.com/alexgrfn/projet_assiste_V1
 // Comme vous pouvez le constater, mon fichier a une structure Maven.
-// https://github.com/alexgrfn/projet_assiste_V1
 
 // Projet : Système de Réservation de Vols
 
 // Classe de base Personne
+
 abstract class Personne {
     protected int identifiant;
     protected String nom;
@@ -28,6 +31,7 @@ abstract class Personne {
 }
 
 // Employe hérite de Personne
+
 class Employe extends Personne {
     protected int numeroEmploye;
     protected Date dateEmbauche;
@@ -42,6 +46,8 @@ class Employe extends Personne {
         return this.getClass().getSimpleName();
     }
 }
+
+// Pilote hérite d'Employe
 
 class Pilote extends Employe {
     private String licence;
@@ -62,6 +68,7 @@ class Pilote extends Employe {
     }
 }
 
+// PersonnelCabine hérite d'Employe
 class PersonnelCabine extends Employe {
     private String qualification;
 
@@ -78,6 +85,8 @@ class PersonnelCabine extends Employe {
         return "Vol affecté au personnel cabine: " + nom;
     }
 }
+
+// Classe Passager hérite de Personne
 
 class Passager extends Personne {
     private String passeport;
@@ -102,6 +111,8 @@ class Passager extends Personne {
         return reservations;
     }
 }
+
+// Classe reservation
 
 class Reservation {
     private String numeroReservation;
@@ -133,7 +144,17 @@ class Reservation {
     public String getNumeroReservation() {
         return numeroReservation;
     }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public Vol getVol() {
+        return vol;
+    }
 }
+
+// Classe Avion
 
 class Avion {
     private String immatriculation;
@@ -158,6 +179,8 @@ class Avion {
         return vols.stream().noneMatch(v -> v.getDateHeureDepart().equals(vol.getDateHeureDepart()));
     }
 }
+
+// Classe Vol
 
 class Vol {
     private String numeroVol;
@@ -211,7 +234,13 @@ class Vol {
     public Date getDateHeureDepart() {
         return dateHeureDepart;
     }
+
+    public String getDestination(){
+        return destination;
+    }
 }
+
+// Classe Aeroport
 
 class Aeroport {
     private String nom;
@@ -231,6 +260,7 @@ class Aeroport {
 }
 
 // Exemple de point d'entrée Main
+
 public class Main {
     public static void main(String[] args) {
         Passager p1 = new Passager(1, "Alice", "Paris", "0600000000", "P12345");
@@ -241,3 +271,36 @@ public class Main {
     }
 }
 
+class Statistiques {
+
+    // Génère un rapport simple sur les vols
+    public static void genererRapportVols(List<Vol> vols, List<Reservation> reservations) {
+        System.out.println("\n========= RAPPORT STATISTIQUES =========");
+
+        System.out.println("Nombre total de vols : " + vols.size());
+
+        long totalPassagers = reservations.stream()
+                .filter(res -> res.getStatut().equalsIgnoreCase("confirmé"))
+                .count();
+        System.out.println("Nombre total de passagers transportés : " + totalPassagers);
+
+        double revenus = totalPassagers * 150.0; // Supposons 150€ par billet
+        System.out.println("Revenus générés (estimés) : " + revenus + " €");
+
+        afficherDestinationsPopulaires(reservations);
+    }
+
+    // Affiche les destinations les plus populaires
+    public static void afficherDestinationsPopulaires(List<Reservation> reservations) {
+        Map<String, Long> compteur = reservations.stream()
+                .filter(res -> res.getStatut().equalsIgnoreCase("confirmé"))
+                .map(res -> res.getVol().getDestination())
+                .collect(Collectors.groupingBy(dest -> dest, Collectors.counting()));
+
+        System.out.println("\nDestinations les plus populaires :");
+        compteur.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .forEach(entry -> System.out.println("- " + entry.getKey() + " : " + entry.getValue() + " réservations"));
+    }
+}
