@@ -265,12 +265,46 @@ class Aeroport {
 
 public class Main {
     public static void main(String[] args) {
-        Passager p1 = new Passager(1, "Alice", "Paris", "0600000000", "P12345");
-        Vol vol1 = new Vol("AF001", "Paris", "Tokyo", new Date(), new Date());
+        // Création des employés
+        Pilote pilote1 = new Pilote(1, "Jean Pilote", "Paris", "0600000001", 1001, new Date(), "LIC-001", 1200);
+        PersonnelCabine cabine1 = new PersonnelCabine(2, "Claire Hôtesse", "Lyon", "0600000002", 2001, new Date(), "Sécurité");
 
+        // Création d'un avion
+        Avion avion1 = new Avion("F-ABCD", "Airbus A320", 180);
+
+        // Création de passagers
+        Passager p1 = new Passager(3, "Alice", "Marseille", "0600000003", "PASS-001");
+        Passager p2 = new Passager(4, "Bob", "Toulouse", "0600000004", "PASS-002");
+
+        // Création de vols
+        Date maintenant = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(maintenant);
+        cal.add(Calendar.HOUR, 5);
+        Date plusTard = cal.getTime();
+
+        Vol vol1 = new Vol("AF101", "Paris", "New York", maintenant, plusTard);
+        Vol vol2 = new Vol("AF102", "Paris", "Tokyo", maintenant, plusTard);
+
+        // Affecter pilote et personnel
+        pilote1.affecterVol(vol1);
+        cabine1.affecterVol(vol1);
+
+        // Affecter un avion à vol1
+        avion1.affecterVol(vol1);
+
+        // Passagers réservent
         p1.reserverVol(vol1);
-        p1.obtenirReservations().forEach(r -> System.out.println(r.getNumeroReservation()));
+        p2.reserverVol(vol1);
+        p2.reserverVol(vol2);
+
+        // Annuler une réservation
+        if (!p2.obtenirReservations().isEmpty()) {
+            String numRes = p2.obtenirReservations().get(0).getNumeroReservation();
+            p2.annulerReservation(numRes);
+        }
     }
+
 }
 
 // BONUS : CLASS STATISTIQUES
