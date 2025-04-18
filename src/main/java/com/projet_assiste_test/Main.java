@@ -1,7 +1,9 @@
 package com.projet_assiste_test;
 import java.util.*;
 import java.util.stream.Collectors;
-
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 // ALEXANDRE GARAFFINI G5
 
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
 // Comme vous pouvez le constater, mon fichier a une structure Maven.
 
 // Projet : Système de Réservation de Vols
+
+
 
 // Classe de base Personne
 
