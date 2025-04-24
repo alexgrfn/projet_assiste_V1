@@ -4,6 +4,11 @@ import java.util.stream.Collectors;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 // ALEXANDRE GARAFFINI G5
 
@@ -11,12 +16,14 @@ import java.sql.SQLException;
 
 // Lien vers le répositoire github : https://github.com/alexgrfn/projet_assiste_V1
 // Comme vous pouvez le constater, mon fichier a une structure Maven.
+// Sur certaines fonctions j'ai rajouté plusieurs fonctionnalités qui me semblaient intéressantes pour le modèle.
+// J'ai ajouté le test Unit dans le fichier FlightSystemTests.java ; le test API dans FlightSearchAPI et
+// le test de la connexion à la BDD dans TestConnexionBDD.java
 
-// Projet : Système de Réservation de Vols
 
 
 
-// Classe de base Personne
+// CLASSE PERSONNE
 
 abstract class Personne {
     protected int identifiant;
@@ -36,7 +43,8 @@ abstract class Personne {
     }
 }
 
-// Employe hérite de Personne
+// CLASSE EMPLOYE
+
 
 class Employe extends Personne {
     protected int numeroEmploye;
@@ -53,7 +61,7 @@ class Employe extends Personne {
     }
 }
 
-// Pilote hérite d'Employe
+// CLASSE PILOTE
 
 class Pilote extends Employe {
     private String licence;
@@ -74,7 +82,10 @@ class Pilote extends Employe {
     }
 }
 
-// PersonnelCabine hérite d'Employe
+
+// CLASSE PERSONNEL CABINE
+
+
 class PersonnelCabine extends Employe {
     private String qualification;
 
@@ -92,7 +103,8 @@ class PersonnelCabine extends Employe {
     }
 }
 
-// Classe Passager hérite de Personne
+// CLASSE PASSAGER
+
 
 class Passager extends Personne {
     private String passeport;
@@ -104,9 +116,13 @@ class Passager extends Personne {
     }
 
     public void reserverVol(Vol vol) {
-        Reservation res = new Reservation(UUID.randomUUID().toString(), new Date(), "Confirmée", this, vol);
-        reservations.add(res);
-        vol.ajouterReservation(res);
+        if (vol.aDesPlacesDisponibles()) {
+            Reservation res = new Reservation(UUID.randomUUID().toString(), new Date(), "Confirmée", this, vol);
+            reservations.add(res);
+            vol.ajouterReservation(res);
+        } else {
+            System.out.println("❌ Le vol " + vol.getNumeroVol() + " est complet !");
+        }
     }
 
     public void annulerReservation(String numeroReservation) {
@@ -116,9 +132,15 @@ class Passager extends Personne {
     public List<Reservation> obtenirReservations() {
         return reservations;
     }
+
+    public String getNom() {
+        return nom;
+    }
 }
 
-// Classe reservation
+
+// CLASSE RESERVATION
+
 
 class Reservation {
     private String numeroReservation;
@@ -158,9 +180,15 @@ class Reservation {
     public Vol getVol() {
         return vol;
     }
+
+    public Passager getPassager() {
+        return passager;
+    }
 }
 
-// Classe Avion
+
+// CLASSE AVION
+
 
 class Avion {
     private String immatriculation;
@@ -184,9 +212,14 @@ class Avion {
     public boolean verifierDisponibilite(Vol vol) {
         return vols.stream().noneMatch(v -> v.getDateHeureDepart().equals(vol.getDateHeureDepart()));
     }
+
+    public int getCapacite() {
+        return capacite;
+    }
 }
 
-// Classe Vol
+
+// CLASSE VOL
 
 class Vol {
     private String numeroVol;
@@ -241,12 +274,32 @@ class Vol {
         return dateHeureDepart;
     }
 
-    public String getDestination(){
+    public String getDestination() {
         return destination;
+    }
+
+    public String getNumeroVol() {
+        return numeroVol;
+    }
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public boolean aDesPlacesDisponibles() {
+        return avion != null && reservations.size() < avion.getCapacite();
+    }
+
+    public void listerPassagers() {
+        System.out.println("📋 Passagers du vol " + numeroVol + " :");
+        for (Reservation res : reservations) {
+            System.out.println("- " + res.getPassager().getNom());
+        }
     }
 }
 
-// Classe Aeroport
+// CLASSE AEROPORT
+
 
 class Aeroport {
     private String nom;
@@ -265,77 +318,28 @@ class Aeroport {
     }
 }
 
-// Exemple de point d'entrée Main
+// CLASSE STATISTIQUES (BONUS)
 
-public class Main {
-    public static void main(String[] args) {
-        // Création des employés
-        Pilote pilote1 = new Pilote(1, "Jean Pilote", "Paris", "0600000001", 1001, new Date(), "LIC-001", 1200);
-        PersonnelCabine cabine1 = new PersonnelCabine(2, "Claire Hôtesse", "Lyon", "0600000002", 2001, new Date(), "Sécurité");
-
-        // Création d'un avion
-        Avion avion1 = new Avion("F-ABCD", "Airbus A320", 180);
-
-        // Création de passagers
-        Passager p1 = new Passager(3, "Alice", "Marseille", "0600000003", "PASS-001");
-        Passager p2 = new Passager(4, "Bob", "Toulouse", "0600000004", "PASS-002");
-
-        // Création de vols
-        Date maintenant = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(maintenant);
-        cal.add(Calendar.HOUR, 5);
-        Date plusTard = cal.getTime();
-
-        Vol vol1 = new Vol("AF101", "Paris", "New York", maintenant, plusTard);
-        Vol vol2 = new Vol("AF102", "Paris", "Tokyo", maintenant, plusTard);
-
-        // Affecter pilote et personnel
-        pilote1.affecterVol(vol1);
-        cabine1.affecterVol(vol1);
-
-        // Affecter un avion à vol1
-        avion1.affecterVol(vol1);
-
-        // Passagers réservent
-        p1.reserverVol(vol1);
-        p2.reserverVol(vol1);
-        p2.reserverVol(vol2);
-
-        // Annuler une réservation
-        if (!p2.obtenirReservations().isEmpty()) {
-            String numRes = p2.obtenirReservations().get(0).getNumeroReservation();
-            p2.annulerReservation(numRes);
-        }
-    }
-
-}
-
-// BONUS : CLASS STATISTIQUES
 
 class Statistiques {
-
-    // Génère un rapport simple sur les vols
     public static void genererRapportVols(List<Vol> vols, List<Reservation> reservations) {
         System.out.println("\n========= RAPPORT STATISTIQUES =========");
-
         System.out.println("Nombre total de vols : " + vols.size());
 
         long totalPassagers = reservations.stream()
-                .filter(res -> res.getStatut().equalsIgnoreCase("confirmé"))
+                .filter(res -> res.getStatut().equalsIgnoreCase("confirmée"))
                 .count();
         System.out.println("Nombre total de passagers transportés : " + totalPassagers);
 
-        double revenus = totalPassagers * 150.0; // Supposons 150€ par billet
+        double revenus = totalPassagers * 150.0;
         System.out.println("Revenus générés (estimés) : " + revenus + " €");
 
         afficherDestinationsPopulaires(reservations);
     }
 
-    // Affiche les destinations les plus populaires
     public static void afficherDestinationsPopulaires(List<Reservation> reservations) {
         Map<String, Long> compteur = reservations.stream()
-                .filter(res -> res.getStatut().equalsIgnoreCase("confirmé"))
+                .filter(res -> res.getStatut().equalsIgnoreCase("confirmée"))
                 .map(res -> res.getVol().getDestination())
                 .collect(Collectors.groupingBy(dest -> dest, Collectors.counting()));
 
@@ -345,4 +349,91 @@ class Statistiques {
                 .limit(5)
                 .forEach(entry -> System.out.println("- " + entry.getKey() + " : " + entry.getValue() + " réservations"));
     }
+
+    public static void annulerVolsSansReservations(List<Vol> vols) {
+        Date maintenant = new Date();
+        for (Vol vol : vols) {
+            long heuresRestantes = (vol.getDateHeureDepart().getTime() - maintenant.getTime()) / (1000 * 60 * 60);
+            if (heuresRestantes <= 24 && vol.getReservations().isEmpty()) {
+                vol.annulerVol();
+                System.out.println("⚠️ Vol " + vol.getNumeroVol() + " annulé (aucune réservation à H-24)");
+            }
+        }
+    }
+
+    // POUR METTRE DES VALEURS DANS UN FICHIER CSV PUIS DANS UNE BDD
+    class FichierCSV {
+
+        public static List<Vol> importerVolsDepuisCSV(String cheminFichier) {
+            List<Vol> vols = new ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(cheminFichier))) {
+                String ligne;
+                while ((ligne = reader.readLine()) != null) {
+                    String[] elements = ligne.split(",");
+                    String code = elements[0];
+                    String dep = elements[1];
+                    String arr = elements[2];
+                    Date date = new Date(); // simpliﬁcation
+                    vols.add(new Vol(code, dep, arr, date, date));
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur de lecture du fichier : " + e.getMessage());
+            }
+            return vols;
+        }
+    }
+
 }
+
+
+// CLASS MAIN POUR FAIRE LES TESTS DE FONCTIONS
+
+public class Main {
+    public static void main(String[] args) {
+        Pilote pilote1 = new Pilote(1, "Jean Pilote", "Paris", "0600000001", 1001, new Date(), "LIC-001", 1200);
+        PersonnelCabine cabine1 = new PersonnelCabine(2, "Claire Hôtesse", "Lyon", "0600000002", 2001, new Date(), "Sécurité");
+        Avion avion1 = new Avion("F-ABCD", "Airbus A320", 2);
+
+        Passager p1 = new Passager(3, "Alice", "Marseille", "0600000003", "PASS-001");
+        Passager p2 = new Passager(4, "Bob", "Toulouse", "0600000004", "PASS-002");
+
+        Date maintenant = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(maintenant);
+        cal.add(Calendar.HOUR, 5);
+        Date plusTard = cal.getTime();
+
+        Vol vol1 = new Vol("AF101", "Paris", "New York", maintenant, plusTard);
+        Vol vol2 = new Vol("AF102", "Paris", "Tokyo", maintenant, plusTard);
+
+        pilote1.affecterVol(vol1);
+        cabine1.affecterVol(vol1);
+        avion1.affecterVol(vol1);
+
+        p1.reserverVol(vol1);
+        p2.reserverVol(vol1);
+        p2.reserverVol(vol2);
+
+        if (!p2.obtenirReservations().isEmpty()) {
+            String numRes = p2.obtenirReservations().get(0).getNumeroReservation();
+            p2.annulerReservation(numRes);
+        }
+
+        System.out.println("\n=== Passagers du vol ===");
+        vol1.listerPassagers();
+
+        System.out.println("\n=== Statistiques ===");
+        List<Vol> tousLesVols = Arrays.asList(vol1, vol2);
+        List<Reservation> toutesRes = new ArrayList<>();
+        toutesRes.addAll(p1.obtenirReservations());
+        toutesRes.addAll(p2.obtenirReservations());
+        Statistiques.genererRapportVols(tousLesVols, toutesRes);
+
+        System.out.println("\n=== Annulation automatique ===");
+        Statistiques.annulerVolsSansReservations(tousLesVols);
+    }
+}
+
+
+
+
